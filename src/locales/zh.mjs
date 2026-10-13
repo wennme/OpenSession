@@ -3,6 +3,7 @@ export const zh = {
   "nav.title": "会话浏览器",
   "nav.stats": "Token",
   "nav.trash": "回收站",
+  "nav.chat": "💬 聊天",
   "nav.search_placeholder": "搜索会话... ( / )",
 
   // Sessions list

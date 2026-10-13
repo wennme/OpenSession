@@ -37,6 +37,7 @@ export function layout(title, body, page = "home", { provider = null, providers 
     <div class="topbar-actions">
       <a href="${providerPrefix}/stats" class="nav-link">${t("nav.stats")}</a>
       ${provider === "opencode" ? `<a href="${providerPrefix}/trash" class="nav-link">${t("nav.trash")}</a>` : ""}
+      <a href="${escapeHtml(process.env.OPENCODE_WEB_URL || "http://127.0.0.1:49374")}" class="nav-link" target="_blank" rel="noopener">${t("nav.chat")}</a>
       <form class="search-form" action="${providerPrefix}/search" method="GET">
         <input type="text" name="q" placeholder="${t("nav.search_placeholder")}" class="search-input" id="search-input">
       </form>

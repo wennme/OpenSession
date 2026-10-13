@@ -3,6 +3,7 @@ export const en = {
   "nav.title": "Session Viewer",
   "nav.stats": "Token",
   "nav.trash": "Trash",
+  "nav.chat": "💬 Chat",
   "nav.search_placeholder": "Search sessions... ( / )",
 
   // Sessions list
