@@ -25,9 +25,20 @@ export function getDb() {
   return dbInstance;
 }
 
-export function listSessions(limit = 50, offset = 0, search = "", timeRange = "") {
+export function listSessions(limit = 50, offset = 0, search = "", timeRange = "", ids = null) {
   const db = getDb();
   const searchTerm = search ? `%${search}%` : null;
+
+  // Optional explicit id whitelist (e.g. starred sessions only)
+  let idFilter = "";
+  let idParams = [];
+  if (Array.isArray(ids)) {
+    if (!ids.length) {
+      return { sessions: [], total: 0 };
+    }
+    idFilter = ` AND session.id IN (${ids.map(() => "?").join(",")})`;
+    idParams = ids;
+  }
 
   // Time range filter
   let timeFilter = "";
@@ -43,8 +54,8 @@ export function listSessions(limit = 50, offset = 0, search = "", timeRange = ""
   }
 
   const whereClause = searchTerm
-    ? `WHERE time_archived IS NULL AND parent_id IS NULL AND (COALESCE(title, '') LIKE ? OR COALESCE(slug, '') LIKE ? OR COALESCE(directory, '') LIKE ?)${timeFilter}`
-    : `WHERE time_archived IS NULL AND parent_id IS NULL${timeFilter}`;
+    ? `WHERE time_archived IS NULL AND parent_id IS NULL AND (COALESCE(title, '') LIKE ? OR COALESCE(slug, '') LIKE ? OR COALESCE(directory, '') LIKE ?)${timeFilter}${idFilter}`
+    : `WHERE time_archived IS NULL AND parent_id IS NULL${timeFilter}${idFilter}`;
   const searchParams = searchTerm ? [searchTerm, searchTerm, searchTerm] : [];
 
   const sessions = db.prepare(`
@@ -54,13 +65,13 @@ export function listSessions(limit = 50, offset = 0, search = "", timeRange = ""
     ${whereClause}
     ORDER BY time_updated DESC, time_created DESC
     LIMIT ? OFFSET ?
-  `).all(...searchParams, limit, offset);
+  `).all(...searchParams, ...idParams, limit, offset);
 
   const totalRow = db.prepare(`
     SELECT COUNT(*) AS total
     FROM session
     ${whereClause}
-  `).get(...searchParams);
+  `).get(...searchParams, ...idParams);
 
   return { sessions, total: totalRow?.total ?? 0 };
 }

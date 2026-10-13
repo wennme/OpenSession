@@ -11,6 +11,7 @@ export function renderSessionsPage({
   query = "",
   note = "",
   range = "",
+  starred = false,
   totalMessages = 0,
   deletedCount = 0,
   provider = "opencode",
@@ -32,12 +33,21 @@ export function renderSessionsPage({
     { key: "month", label: t("range.month") }
   ];
   const rangeParam = range || "";
+  const filterHref = (key, starredOn) => {
+    const params = new URLSearchParams();
+    if (starredOn) params.set("starred", "1");
+    if (key) params.set("range", key);
+    const qs = params.toString();
+    return qs ? `/${provider}?${qs}` : `/${provider}`;
+  };
   const rangeButtons = ranges.map(r => {
     const active = r.key === rangeParam ? " active" : "";
-    const href = r.key ? `/${provider}?range=${r.key}` : `/${provider}`;
-    return `<a href="${href}" class="range-btn${active}">${r.label}</a>`;
+    return `<a href="${filterHref(r.key, starred)}" class="range-btn${active}">${r.label}</a>`;
   }).join("");
-  const filterBar = `<div class="range-filter">${rangeButtons}</div>`;
+  const starredButton = provider === "opencode"
+    ? `<a href="${filterHref(rangeParam, !starred)}" class="range-btn${starred ? " active" : ""}">${t("range.starred")}</a>`
+    : "";
+  const filterBar = `<div class="range-filter">${rangeButtons}${starredButton}</div>`;
   const dashboard = `
     <section class="dashboard-grid">
       <a href="#session-list" class="dash-card">
@@ -113,7 +123,7 @@ export function renderSessionsPage({
     <section class="session-list" id="session-list">
       ${cards}
     </section>
-    ${total > limit ? `<div id="scroll-sentinel" data-offset="${offset + sessions.length}" data-total="${total}" data-range="${escapeHtml(range)}" data-query="${escapeHtml(query)}" data-provider="${provider}"></div>` : ""}
+    ${total > limit ? `<div id="scroll-sentinel" data-offset="${offset + sessions.length}" data-total="${total}" data-range="${escapeHtml(range)}" data-query="${escapeHtml(query)}" data-starred="${starred ? "1" : ""}" data-provider="${provider}"></div>` : ""}
   `;
 
   return layout(query ? t("sessions.search_title").replace("{query}", query) : t("sessions.title"), body, query ? "search" : "home", { provider, providers });

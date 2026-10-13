@@ -19,6 +19,7 @@ export const zh = {
   "range.today": "今天",
   "range.week": "本周",
   "range.month": "本月",
+  "range.starred": "★ 收藏",
 
   // Session card
   "card.files": "{count} 个文件",

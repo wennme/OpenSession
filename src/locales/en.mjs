@@ -19,6 +19,7 @@ export const en = {
   "range.today": "Today",
   "range.week": "This Week",
   "range.month": "This Month",
+  "range.starred": "★ Starred",
 
   // Session card
   "card.files": "{count} files",

@@ -395,6 +395,7 @@ if (scrollSentinel && sessionList && "IntersectionObserver" in window) {
   const scrollTotal = Number(scrollSentinel.dataset.total) || 0;
   const scrollRange = scrollSentinel.dataset.range || "";
   const scrollQuery = scrollSentinel.dataset.query || "";
+  const scrollStarred = scrollSentinel.dataset.starred || "";
   let isLoading = false;
 
   const setSentinelState = (className, text) => {
@@ -418,6 +419,7 @@ if (scrollSentinel && sessionList && "IntersectionObserver" in window) {
       });
       if (scrollRange) params.set("range", scrollRange);
       if (scrollQuery) params.set("q", scrollQuery);
+      if (scrollStarred) params.set("starred", "1");
 
       const res = await fetch(`/api/${PROVIDER}/sessions?${params.toString()}`);
       if (!res.ok) {

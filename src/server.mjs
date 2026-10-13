@@ -131,6 +131,16 @@ function enrichSessionList(sessions, metaMap, excludedIds) {
     .map((session) => enrichSession(session, metaMap));
 }
 
+function getStarredIds(metaMap, excludedIds) {
+  const ids = [];
+  for (const meta of metaMap.values()) {
+    if (meta?.starred && (!meta.provider || meta.provider === "opencode") && !excludedIds.has(meta.session_id)) {
+      ids.push(meta.session_id);
+    }
+  }
+  return ids;
+}
+
 function getSearchResults(query, limit, offset) {
   const term = (query || "").trim();
   if (!term) {
@@ -492,6 +502,7 @@ export async function startServer(config = getConfig()) {
         const apiOffset = Math.max(0, Number(url.searchParams.get("offset")) || 0);
         const range = url.searchParams.get("range") || "";
         const query = url.searchParams.get("q") || "";
+        const starred = url.searchParams.get("starred") === "1";
 
         if (providerId === "opencode") {
           const metaMap = getAllMeta();
@@ -499,7 +510,11 @@ export async function startServer(config = getConfig()) {
 
           let sessions;
           let total;
-          if (query) {
+          if (starred) {
+            const results = listSessions(apiLimit, apiOffset, "", range, getStarredIds(metaMap, excludedIds));
+            sessions = enrichSessionList(results.sessions, metaMap, excludedIds);
+            total = results.total;
+          } else if (query) {
             const results = getSearchResults(query, apiLimit, apiOffset);
             sessions = enrichSessionList(results.sessions, metaMap, excludedIds);
             total = results.total;
@@ -717,19 +732,23 @@ export async function startServer(config = getConfig()) {
     if (subPath === "/") {
       try {
         const range = url.searchParams.get("range") || "";
+        const starred = url.searchParams.get("starred") === "1";
         if (providerSegment === "opencode") {
-          const { sessions, total } = listSessions(limit, offset, "", range);
           const metaMap = getAllMeta();
           const excludedIds = getExcludedIds();
-          const enrichedSessions = enrichSessionList(sessions, metaMap, excludedIds).map((session) => normalizeSessionRecord(session));
+          const results = starred
+            ? listSessions(limit, offset, "", range, getStarredIds(metaMap, excludedIds))
+            : listSessions(limit, offset, "", range);
+          const enrichedSessions = enrichSessionList(results.sessions, metaMap, excludedIds).map((session) => normalizeSessionRecord(session));
           const overviewStats = getStats();
           const deletedCount = getDeletedIds().length;
           send(res, 200, renderSessionsPage({
             sessions: enrichedSessions,
-            total,
+            total: results.total,
             limit,
             offset,
             range,
+            starred,
             totalMessages: overviewStats.totalMessages,
             deletedCount,
             ...renderContext
